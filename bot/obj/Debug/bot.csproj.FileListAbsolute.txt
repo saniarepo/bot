@@ -1,5 +1,4 @@
 G:\Users\Alexander\Documents\WOWBot\work\bot\bot\bin\Debug\bot.exe.config
-G:\Users\Alexander\Documents\WOWBot\work\bot\bot\obj\Debug\bot.csprojResolveAssemblyReference.cache
 G:\Users\Alexander\Documents\WOWBot\work\bot\bot\bin\Debug\bot.exe
 G:\Users\Alexander\Documents\WOWBot\work\bot\bot\bin\Debug\bot.pdb
 G:\Users\Alexander\Documents\WOWBot\work\bot\bot\bin\Debug\SlimDX.dll
@@ -7,3 +6,4 @@ G:\Users\Alexander\Documents\WOWBot\work\bot\bot\bin\Debug\SlimDX.pdb
 G:\Users\Alexander\Documents\WOWBot\work\bot\bot\bin\Debug\SlimDX.xml
 G:\Users\Alexander\Documents\WOWBot\work\bot\bot\obj\Debug\bot.exe
 G:\Users\Alexander\Documents\WOWBot\work\bot\bot\obj\Debug\bot.pdb
+G:\Users\Alexander\Documents\WOWBot\work\bot\bot\obj\Debug\bot.csprojResolveAssemblyReference.cache

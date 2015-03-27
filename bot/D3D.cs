@@ -99,13 +99,13 @@ namespace bot
 
         }//end func
 
-        public byte[] getOpcodeD3D9(uint Address)
+        public byte[] getOpcodeD3D9(uint address)
         {
+            if (address == 0) return null;
             try
             {
-
                 var processMemory = new ProcessMemory((int)Process.GetCurrentProcess().Id);
-                byte[] _D3D9OpCode = (int)processMemory.Read((int)Address) != 0x6a ? processMemory.ReadBytes((int)Address, 5) : processMemory.ReadBytes((int)Address, 7);
+                byte[] _D3D9OpCode = (int)processMemory.Read((int)address) != 0x6a ? processMemory.ReadBytes((int)address, 5) : processMemory.ReadBytes((int)address, 7);
                 return _D3D9OpCode;
             }
             catch (Exception e)
@@ -117,18 +117,29 @@ namespace bot
         }//end func
 
 
-        public byte[] getOpcodeD3D11(uint Address)
+        public byte[] getOpcodeD3D11(uint address)
         {
+            if (address == 0) return null;
             try
             {
                 var processMemory = new ProcessMemory((int)Process.GetCurrentProcess().Id);
-                byte[] _D3D11OpCode = processMemory.ReadBytes((int)Address, 5);
+                byte[] _D3D11OpCode = processMemory.ReadBytes((int)address, 5);
                 return _D3D11OpCode;
             }
             catch (Exception e)
             {
                 return null;
             }
+        }
+
+        public uint getAddress()
+        {
+            return (this.getAddressD3D9() == 0) ? this.getAddressD3D11() : this.getAddressD3D9();
+        }
+
+        public byte[] getOpcode() 
+        {
+            return (this.getAddressD3D9() == 0) ? this.getOpcodeD3D11(this.getAddressD3D11()) : this.getOpcodeD3D9(this.getAddressD3D9()); 
         }
     }
 }

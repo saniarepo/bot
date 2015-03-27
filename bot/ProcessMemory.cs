@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using Fasm;
 
 namespace bot
 {
@@ -22,7 +23,49 @@ namespace bot
         [DllImport("kernel32.dll")]
         public static extern Int32 CloseHandle(IntPtr hProcess);
 
-        private IntPtr handle;
+        [DllImport("kernel32.dll")]
+        static extern IntPtr OpenThread(ThreadAccess dwDesiredAcces,
+            bool bInheritHandle,
+            uint dwThreadId
+        );
+
+        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+        static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress,
+           uint dwSize, AllocationType flAllocationType, MemoryProtection flProtect);
+
+        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
+        static extern bool VirtualFreeEx(IntPtr hProcess, IntPtr lpAddress,
+           int dwSize, FreeType dwFreeType);
+        
+        [Flags]
+
+        public enum AllocationType
+        {
+            Commit = 0x1000,
+            Reserve = 0x2000,
+            Decommit = 0x4000,
+            Release = 0x8000,
+            Reset = 0x80000,
+            Physical = 0x400000,
+            TopDown = 0x100000,
+            WriteWatch = 0x200000,
+            LargePages = 0x20000000
+        }
+
+        public enum MemoryProtection
+        {
+            Execute = 0x10,
+            ExecuteRead = 0x20,
+            ExecuteReadWrite = 0x40,
+            ExecuteWriteCopy = 0x80,
+            NoAccess = 0x01,
+            ReadOnly = 0x02,
+            ReadWrite = 0x04,
+            WriteCopy = 0x08,
+            GuardModifierflag = 0x100,
+            NoCacheModifierflag = 0x200,
+            WriteCombineModifierflag = 0x400
+        }
 
         public enum ProcessAccessFlags : uint
         {
@@ -37,12 +80,40 @@ namespace bot
             QueryInformation = 0x00000400,
             Synchronize = 0x00100000
         }
+
+        [Flags]
+        public enum ThreadAccess : int
+        {
+            TERMINATE = (0x0001),
+            SUSPEND_RESUME = (0x0002),
+            GET_CONTEXT = (0x0008),
+            SET_CONTEXT = (0x0010),
+            SET_INFORMATION = (0x0020),
+            QUERY_INFORMATION = (0x0040),
+            SET_THREAD_TOKEN = (0x0080),
+            IMPERSONATE = (0x0100),
+            DIRECT_IMPERSONATION = (0x0200),
+            TO_INJECT = (0x1F03FF)
+        }
+
+        [Flags]
+        public enum FreeType
+        {
+            Decommit = 0x4000,
+            Release = 0x8000,
+        }
         
-        public ProcessMemory(int ProcessId) 
+        private IntPtr handle;
+        private int processId;
+        public ManagedFasm Asm;       
+
+        
+        public ProcessMemory(int processId) 
         {
             try
             {
-                this.handle = OpenProcess(ProcessAccessFlags.All, false, ProcessId);
+                this.processId = processId;
+                this.handle = OpenProcess(ProcessAccessFlags.All, false, processId);
             }
             catch (Exception e) {
                 this.handle = (IntPtr)0;
@@ -52,10 +123,12 @@ namespace bot
 
         public ProcessMemory(String ProcessName) 
         {
-            int ProcessId = Process.GetProcessesByName(ProcessName)[0].Id;
+            int processId;
             try
             {
-                this.handle = OpenProcess(ProcessAccessFlags.All, false, ProcessId);
+                processId = Process.GetProcessesByName(ProcessName)[0].Id;
+                this.processId = processId;
+                this.handle = OpenProcess(ProcessAccessFlags.All, false, processId);
             }
             catch (Exception e) {
                 this.handle = (IntPtr)0;
@@ -94,18 +167,50 @@ namespace bot
             return BitConverter.ToUInt32(buffer, 0);
         }
 
-        public bool WriteBytes(int address, byte[] buffer, out int bytesWritten)
+        public bool WriteBytes(IntPtr address, byte[] buffer)
         {
             if (this.handle == (IntPtr)0)
             {
-                bytesWritten = 0;
                 return false;
             }
-            bool worked = WriteProcessMemory(this.handle, (IntPtr)address, buffer, (uint)buffer.Length, out bytesWritten);
+            int bytesWritten;
+            bool worked = WriteProcessMemory(this.handle, address, buffer, (uint)buffer.Length, out bytesWritten);
             return worked;
         }
 
+        public bool Write(IntPtr address, int value)
+        {
+            if (this.handle == (IntPtr)0)
+            {
+                return false;
+            }
+            byte[] buffer = BitConverter.GetBytes(value);
 
+            int bytesWritten;
+            bool worked = WriteProcessMemory(this.handle, address, buffer, (uint)buffer.Length, out bytesWritten);
+            return worked;
+        }
 
+        public IntPtr AllocateMemory(uint length)
+        {
+            IntPtr addr = VirtualAllocEx(this.handle, IntPtr.Zero, length, AllocationType.Commit, MemoryProtection.ExecuteReadWrite);
+            return addr;
+        }
+
+        public IntPtr OpenThr( uint dwThreadId)
+        {
+            return OpenThread(ThreadAccess.TO_INJECT, false, (uint)dwThreadId);
+        }
+
+        public bool FreeMemory(IntPtr address)
+        {
+            return VirtualFreeEx(this.handle, address, 0, FreeType.Release );
+        }
+
+        public IntPtr getHandle()
+        {
+            return this.handle;
+        }
+        
     }
 }
