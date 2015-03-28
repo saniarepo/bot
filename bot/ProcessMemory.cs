@@ -15,7 +15,7 @@ namespace bot
         private static extern IntPtr OpenProcess(ProcessAccessFlags dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
  
         [DllImport("kernel32.dll")]
-        public static extern bool ReadProcessMemory(IntPtr handle, int lpBaseAddress, byte[] lpBuffer, int nSize, out  int lpNumberOfBytesRead);
+        public static extern bool ReadProcessMemory(IntPtr handle, IntPtr lpBaseAddress, byte[] lpBuffer, uint nSize, out  int lpNumberOfBytesRead);
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, uint nSize, out int lpNumberOfBytesWritten);
@@ -102,7 +102,30 @@ namespace bot
             Decommit = 0x4000,
             Release = 0x8000,
         }
-        
+
+        public static T BuffToStruct<T>(byte[] arr) where T : struct
+        {
+
+            GCHandle gch = GCHandle.Alloc(arr, GCHandleType.Pinned); // зафиксировать в памяти
+            IntPtr ptr = Marshal.UnsafeAddrOfPinnedArrayElement(arr, 0); // и взять его адрес
+            T ret = (T)Marshal.PtrToStructure(ptr, typeof(T)); // создать структуру
+            gch.Free(); // снять фиксацию
+            return ret;
+
+        }
+
+        public static byte[] StructToBuff<T>(T value) where T : struct
+        {
+
+            byte[] arr = new byte[Marshal.SizeOf(value)]; // создать массив
+            GCHandle gch = GCHandle.Alloc(arr, GCHandleType.Pinned); // зафиксировать в памяти
+            IntPtr ptr = Marshal.UnsafeAddrOfPinnedArrayElement(arr, 0); // и взять его адрес
+            Marshal.StructureToPtr(value, ptr, true); // копировать в массив
+            gch.Free(); // снять фиксацию
+            return arr;
+
+        }
+
         private IntPtr handle;
         private int processId;
         public ManagedFasm Asm;       
@@ -141,7 +164,7 @@ namespace bot
         }
 
         
-        public byte[] ReadBytes( int address, int length )
+        public byte[] ReadBytes( IntPtr address, uint length )
         {
             if (this.handle == (IntPtr)0) 
             {   
@@ -153,19 +176,35 @@ namespace bot
             return buffer;
         }
 
-        public uint Read( int address )
+        public uint Read( IntPtr address )
         {
             if (this.handle == (IntPtr)0) 
             { 
                 return 0; 
             }
-            int length = 4;
+            uint length = 4;
             byte[] buffer = new byte[4];
             int bytesRead;
             
             ReadProcessMemory(this.handle, address, buffer, length, out bytesRead);
             return BitConverter.ToUInt32(buffer, 0);
         }
+
+        
+        public T ReadStruct<T>( IntPtr address ) where T : struct
+        {
+            if (this.handle == (IntPtr)0) 
+            { 
+                return default(T); 
+            }
+            uint length = 4;
+            byte[] buffer = new byte[Marshal.SizeOf(typeof(T))];
+            int bytesRead;
+            
+            ReadProcessMemory(this.handle, address, buffer, length, out bytesRead);
+            return BuffToStruct<T>(buffer);
+        }
+
 
         public bool WriteBytes(IntPtr address, byte[] buffer)
         {
@@ -191,6 +230,19 @@ namespace bot
             return worked;
         }
 
+        public bool WriteStruct<T>(IntPtr address, T value) where T : struct
+        {
+            if (this.handle == (IntPtr)0)
+            {
+                return false;
+            }
+            byte[] buffer = StructToBuff<T>(value);
+
+            int bytesWritten;
+            bool worked = WriteProcessMemory(this.handle, address, buffer, (uint)buffer.Length, out bytesWritten);
+            return worked;
+        }
+
         public IntPtr AllocateMemory(uint length)
         {
             IntPtr addr = VirtualAllocEx(this.handle, IntPtr.Zero, length, AllocationType.Commit, MemoryProtection.ExecuteReadWrite);
@@ -210,6 +262,11 @@ namespace bot
         public IntPtr getHandle()
         {
             return this.handle;
+        }
+
+        public int getProcessId()
+        {
+            return this.processId;
         }
         
     }
