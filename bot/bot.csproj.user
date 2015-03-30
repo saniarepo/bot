@@ -10,4 +10,7 @@
     <FallbackCulture>ru-RU</FallbackCulture>
     <VerifyUploadedFiles>false</VerifyUploadedFiles>
   </PropertyGroup>
+  <PropertyGroup>
+    <ReferencePath>G:\Users\Alexander\Documents\WOWBot\work\bot\bot\bin\Debug\</ReferencePath>
+  </PropertyGroup>
 </Project>

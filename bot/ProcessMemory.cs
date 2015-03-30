@@ -7,9 +7,10 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using Fasm;
 
+
 namespace bot
 {
-    class ProcessMemory
+    public class ProcessMemory
     {
         [DllImport("kernel32.dll")]
         private static extern IntPtr OpenProcess(ProcessAccessFlags dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
