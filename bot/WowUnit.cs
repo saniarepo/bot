@@ -159,7 +159,7 @@ namespace bot
 
         public T GetValue<T>(int index) where T : struct
         {
-            return processMemory.ReadStruct<T>(ObjectData.Descriptors + (int)index * IntPtr.Size);
+            return ProcessMemory.ReadStruct<T>(ObjectData.Descriptors + (int)index * IntPtr.Size);
         }
 
     
@@ -180,9 +180,9 @@ namespace bot
                 }
 
                 var position = new Vector3(
-                    processMemory.Read(Pointer + (int)UnitField.UNIT_FIELD_X),
-                    processMemory.Read(Pointer + (int)UnitField.UNIT_FIELD_Y),
-                    processMemory.Read(Pointer + (int)UnitField.UNIT_FIELD_Z)
+                    ProcessMemory.Read(Pointer + (int)UnitField.UNIT_FIELD_X),
+                    ProcessMemory.Read(Pointer + (int)UnitField.UNIT_FIELD_Y),
+                    ProcessMemory.Read(Pointer + (int)UnitField.UNIT_FIELD_Z)
                 );
 
                 return position;

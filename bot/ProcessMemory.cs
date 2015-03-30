@@ -10,10 +10,10 @@ using Fasm;
 
 namespace bot
 {
-    public class ProcessMemory
+    public static class ProcessMemory
     {
         [DllImport("kernel32.dll")]
-        private static extern IntPtr OpenProcess(ProcessAccessFlags dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
+        private static extern IntPtr OpenProcess(ProcessAccessFlags dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, uint dwProcessId);
  
         [DllImport("kernel32.dll")]
         public static extern bool ReadProcessMemory(IntPtr handle, IntPtr lpBaseAddress, byte[] lpBuffer, uint nSize, out  int lpNumberOfBytesRead);
@@ -127,59 +127,58 @@ namespace bot
 
         }
 
-        private IntPtr handle;
-        private int processId;
-        public ManagedFasm Asm;       
+        private static IntPtr handle;
+        private static uint processId;
+        public static ManagedFasm Asm;
+        public static IntPtr ImageBase = (IntPtr)400000;
 
         
-        public ProcessMemory(int processId) 
+        public static void attachProcess(uint procId) 
         {
             try
             {
-                this.processId = processId;
-                this.handle = OpenProcess(ProcessAccessFlags.All, false, processId);
+                processId = procId;
+                handle = OpenProcess(ProcessAccessFlags.All, false, processId);
             }
             catch (Exception e) {
-                this.handle = (IntPtr)0;
+                handle = (IntPtr)0;
             }
             
         }
 
-        public ProcessMemory(String ProcessName) 
+        public static void attachProcess(String ProcessName) 
         {
-            int processId;
             try
             {
-                processId = Process.GetProcessesByName(ProcessName)[0].Id;
-                this.processId = processId;
-                this.handle = OpenProcess(ProcessAccessFlags.All, false, processId);
+                processId = (uint)Process.GetProcessesByName(ProcessName)[0].Id;       
+                handle = OpenProcess(ProcessAccessFlags.All, false, processId);
             }
             catch (Exception e) {
-                this.handle = (IntPtr)0;
+                handle = (IntPtr)0;
             }           
         }
 
-        ~ProcessMemory() 
+        public static void deattach() 
         {
-            CloseHandle(this.handle);
+            CloseHandle(handle);
         }
 
         
-        public byte[] ReadBytes( IntPtr address, uint length )
+        public static byte[] ReadBytes( IntPtr address, uint length )
         {
-            if (this.handle == (IntPtr)0) 
+            if (handle == (IntPtr)0) 
             {   
                 return null; 
             }
             byte[] buffer = new byte[length];
             int bytesRead;
-            ReadProcessMemory(this.handle, address, buffer, length, out bytesRead);
+            ReadProcessMemory(handle, address, buffer, length, out bytesRead);
             return buffer;
         }
 
-        public uint Read( IntPtr address )
+        public static uint Read( IntPtr address )
         {
-            if (this.handle == (IntPtr)0) 
+            if (handle == (IntPtr)0) 
             { 
                 return 0; 
             }
@@ -187,13 +186,13 @@ namespace bot
             byte[] buffer = new byte[4];
             int bytesRead;
             
-            ReadProcessMemory(this.handle, address, buffer, length, out bytesRead);
+            ReadProcessMemory(handle, address, buffer, length, out bytesRead);
             return BitConverter.ToUInt32(buffer, 0);
         }
 
-        public ulong Read(IntPtr address, bool size64)
+        public static ulong Read(IntPtr address, bool size64)
         {
-            if (this.handle == (IntPtr)0)
+            if (handle == (IntPtr)0)
             {
                 return 0;
             }
@@ -202,14 +201,14 @@ namespace bot
             byte[] buffer = new byte[length];
             int bytesRead;
 
-            ReadProcessMemory(this.handle, address, buffer, length, out bytesRead);
+            ReadProcessMemory(handle, address, buffer, length, out bytesRead);
             return BitConverter.ToUInt64(buffer, 0);
         }
 
         
-        public T ReadStruct<T>( IntPtr address ) where T : struct
+        public static T ReadStruct<T>( IntPtr address ) where T : struct
         {
-            if (this.handle == (IntPtr)0) 
+            if (handle == (IntPtr)0) 
             { 
                 return default(T); 
             }
@@ -217,51 +216,64 @@ namespace bot
             byte[] buffer = new byte[Marshal.SizeOf(typeof(T))];
             int bytesRead;
             
-            ReadProcessMemory(this.handle, address, buffer, length, out bytesRead);
+            ReadProcessMemory(handle, address, buffer, length, out bytesRead);
             return BuffToStruct<T>(buffer);
         }
 
 
-        public bool WriteBytes(IntPtr address, byte[] buffer)
+        public static bool WriteBytes(IntPtr address, byte[] buffer)
         {
-            if (this.handle == (IntPtr)0)
+            if (handle == (IntPtr)0)
             {
                 return false;
             }
             int bytesWritten;
-            bool worked = WriteProcessMemory(this.handle, address, buffer, (uint)buffer.Length, out bytesWritten);
+            bool worked = WriteProcessMemory(handle, address, buffer, (uint)buffer.Length, out bytesWritten);
             return worked;
         }
 
-        public bool Write(IntPtr address, int value)
+        public static bool Write(IntPtr address, int value)
         {
-            if (this.handle == (IntPtr)0)
-            {
-                return false;
-            }
-            byte[] buffer = BitConverter.GetBytes(value);
-
-            int bytesWritten;
-            bool worked = WriteProcessMemory(this.handle, address, buffer, (uint)buffer.Length, out bytesWritten);
-            return worked;
-        }
-
-        public bool Write(IntPtr address, ulong value)
-        {
-            if (this.handle == (IntPtr)0)
+            if (handle == (IntPtr)0)
             {
                 return false;
             }
             byte[] buffer = BitConverter.GetBytes(value);
 
             int bytesWritten;
-            bool worked = WriteProcessMemory(this.handle, address, buffer, (uint)buffer.Length, out bytesWritten);
+            bool worked = WriteProcessMemory(handle, address, buffer, (uint)buffer.Length, out bytesWritten);
             return worked;
         }
 
-        public bool WriteStruct<T>(IntPtr address, T value) where T : struct
+        public static bool Write(IntPtr address, ulong value)
         {
-            if (this.handle == (IntPtr)0)
+            if (handle == (IntPtr)0)
+            {
+                return false;
+            }
+            byte[] buffer = BitConverter.GetBytes(value);
+
+            int bytesWritten;
+            bool worked = WriteProcessMemory(handle, address, buffer, (uint)buffer.Length, out bytesWritten);
+            return worked;
+        }
+
+        public static bool Write(IntPtr address, float value)
+        {
+            if (handle == (IntPtr)0)
+            {
+                return false;
+            }
+            byte[] buffer = BitConverter.GetBytes(value);
+
+            int bytesWritten;
+            bool worked = WriteProcessMemory(handle, address, buffer, (uint)buffer.Length, out bytesWritten);
+            return worked;
+        }
+
+        public static bool WriteStruct<T>(IntPtr address, T value) where T : struct
+        {
+            if (handle == (IntPtr)0)
             {
                 return false;
             }
@@ -269,34 +281,39 @@ namespace bot
             byte[] buffer = StructToBuff<T>(value);
 
             int bytesWritten;
-            bool worked = WriteProcessMemory(this.handle, address, buffer, (uint)buffer.Length, out bytesWritten);
+            bool worked = WriteProcessMemory(handle, address, buffer, (uint)buffer.Length, out bytesWritten);
             return worked;
         }
 
-        public IntPtr AllocateMemory(uint length)
+        public static IntPtr AllocateMemory(uint length)
         {
-            IntPtr addr = VirtualAllocEx(this.handle, IntPtr.Zero, length, AllocationType.Commit, MemoryProtection.ExecuteReadWrite);
+            IntPtr addr = VirtualAllocEx(handle, IntPtr.Zero, length, AllocationType.Commit, MemoryProtection.ExecuteReadWrite);
             return addr;
         }
 
-        public IntPtr OpenThr( uint dwThreadId)
+        public static IntPtr OpenThr( uint dwThreadId)
         {
             return OpenThread(ThreadAccess.TO_INJECT, false, (uint)dwThreadId);
         }
 
-        public bool FreeMemory(IntPtr address)
+        public static bool FreeMemory(IntPtr address)
         {
-            return VirtualFreeEx(this.handle, address, 0, FreeType.Release );
+            return VirtualFreeEx(handle, address, 0, FreeType.Release );
         }
 
-        public IntPtr getHandle()
+        public static IntPtr getHandle()
         {
-            return this.handle;
+            return handle;
         }
 
-        public int getProcessId()
+        public static uint getProcessId()
         {
-            return this.processId;
+            return processId;
+        }
+
+        public static IntPtr GetAbsolute(uint offset)
+        {
+            return (IntPtr)((uint)ImageBase + offset);
         }
         
     }

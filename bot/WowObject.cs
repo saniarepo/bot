@@ -86,29 +86,24 @@ namespace bot
               
         private IntPtr BaseAddress;
         public WowObjStruct ObjectData;
-        protected ProcessMemory processMemory = null;
+        
 
         public WowObject(IntPtr address)
         {
             BaseAddress = address;
-            ObjectData = processMemory.ReadStruct<WowObjStruct>(BaseAddress);
-        }
-
-        public void setProcessMemory(ProcessMemory processMemory)
-        {
-            this.processMemory = processMemory;
+            ObjectData = ProcessMemory.ReadStruct<WowObjStruct>(BaseAddress);
         }
 
         public bool IsValid { get { return BaseAddress != IntPtr.Zero; } }
 
         public T GetValue<T>(ObjectFields index) where T : struct
         {
-            return processMemory.ReadStruct<T>(ObjectData.Descriptors + (int)index * IntPtr.Size);
+            return ProcessMemory.ReadStruct<T>(ObjectData.Descriptors + (int)index * IntPtr.Size);
         }
 
         public void SetValue<T>(ObjectFields index, T val) where T : struct
         {
-            processMemory.WriteStruct<T>(ObjectData.Descriptors + (int)index * IntPtr.Size, val);
+            ProcessMemory.WriteStruct<T>(ObjectData.Descriptors + (int)index * IntPtr.Size, val);
         }
 
         public bool IsA(WoWObjectTypeFlags flags)
@@ -123,7 +118,7 @@ namespace bot
 
         public ulong getCuid()
         {
-            return processMemory.Read(ObjectData.Descriptors + (int)ObjectFields.Guid, true);
+            return ProcessMemory.Read(ObjectData.Descriptors + (int)ObjectFields.Guid, true);
         }
 
 

@@ -17,9 +17,13 @@ using System.Windows.Forms;
 
 namespace bot
 {
-    class D3D
+    public static class D3D
     {
-        public IntPtr getAddressD3D9()
+
+        public static IntPtr Address = IntPtr.Zero;
+        public static byte[] OpCode = null;
+        
+        public static IntPtr getAddressD3D9()
         {
 
             int offset = 0xa8;
@@ -35,10 +39,9 @@ namespace bot
                     new[] { new PresentParameters() });
                 using (device)
                 {
-                    //Открываем текущий процесс
-                    var processMemory = new ProcessMemory((int)Process.GetCurrentProcess().Id);
+                    
                     //Считываем необходимый нам адрес расположения в памяти D3D9 функции по смещению 0xA8 от указателя на Com объект
-                    IntPtr _D3D9Adress = (IntPtr)processMemory.Read((IntPtr)processMemory.Read((IntPtr)device.ComPointer + offset));
+                    IntPtr _D3D9Adress = (IntPtr)ProcessMemory.Read((IntPtr)ProcessMemory.Read((IntPtr)device.ComPointer + offset));
                     return _D3D9Adress;
                 }
 
@@ -49,7 +52,7 @@ namespace bot
             }
         }
 
-        public IntPtr getAddressD3D11()
+        public static IntPtr getAddressD3D11()
         {
             int offset = 0x20;
             try
@@ -78,10 +81,9 @@ namespace bot
                         out swapChain);
                     if (result.IsSuccess) using (device) using (swapChain)
                         {
-                            //И открыв текущий процесс - считаем адрес функции и опкоды
-                            var processMemory = new ProcessMemory((int)Process.GetCurrentProcess().Id);
+                           
                             //Считываем наш SwapChain
-                            IntPtr _D3D11Adress = (IntPtr)processMemory.Read((IntPtr)processMemory.Read((IntPtr)swapChain.ComPointer) + offset);
+                            IntPtr _D3D11Adress = (IntPtr)ProcessMemory.Read((IntPtr)ProcessMemory.Read((IntPtr)swapChain.ComPointer) + offset);
                             return _D3D11Adress;
                         }
                     else 
@@ -98,13 +100,12 @@ namespace bot
 
         }//end func
 
-        public byte[] getOpcodeD3D9(IntPtr address)
+        public static byte[] getOpcodeD3D9(IntPtr address)
         {
             if ((int)address == 0) return null;
             try
             {
-                var processMemory = new ProcessMemory((int)Process.GetCurrentProcess().Id);
-                byte[] _D3D9OpCode = (int)processMemory.Read((IntPtr)address) != 0x6a ? processMemory.ReadBytes((IntPtr)address, 5) : processMemory.ReadBytes((IntPtr)address, 7);
+                byte[] _D3D9OpCode = (int)ProcessMemory.Read((IntPtr)address) != 0x6a ? ProcessMemory.ReadBytes((IntPtr)address, 5) : ProcessMemory.ReadBytes((IntPtr)address, 7);
                 return _D3D9OpCode;
             }
             catch (Exception e)
@@ -116,13 +117,12 @@ namespace bot
         }//end func
 
 
-        public byte[] getOpcodeD3D11(IntPtr address)
+        public static byte[] getOpcodeD3D11(IntPtr address)
         {
             if ((int)address == 0) return null;
             try
             {
-                var processMemory = new ProcessMemory((int)Process.GetCurrentProcess().Id);
-                byte[] _D3D11OpCode = processMemory.ReadBytes((IntPtr)address, 5);
+                byte[] _D3D11OpCode = ProcessMemory.ReadBytes((IntPtr)address, 5);
                 return _D3D11OpCode;
             }
             catch (Exception e)
@@ -131,14 +131,13 @@ namespace bot
             }
         }
 
-        public IntPtr getAddress()
+        public static void findAddressAndOpcode()
         {
-            return ((int)this.getAddressD3D9() == 0) ? this.getAddressD3D11() : this.getAddressD3D9();
+            ProcessMemory.attachProcess((uint)Process.GetCurrentProcess().Id);
+            Address = ((int)getAddressD3D9() == 0) ? getAddressD3D11() : getAddressD3D9();
+            OpCode = ((int)getAddressD3D9() == 0) ? getOpcodeD3D11(getAddressD3D11()) : getOpcodeD3D9(getAddressD3D9());
+            ProcessMemory.deattach();
         }
 
-        public byte[] getOpcode() 
-        {
-            return ((int)this.getAddressD3D9() == 0) ? this.getOpcodeD3D11(this.getAddressD3D11()) : this.getOpcodeD3D9(this.getAddressD3D9()); 
-        }
     }
 }

@@ -82,6 +82,7 @@
     <Compile Include="ProcessMemory.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WorldClick.cs" />
     <Compile Include="WowObject.cs" />
     <Compile Include="WowUnit.cs" />
   </ItemGroup>

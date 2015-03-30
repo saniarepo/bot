@@ -14,3 +14,4 @@ C:\Users\sania\Documents\WOWBot\work\bot\bot\bin\Debug\bot.pdb
 C:\Users\sania\Documents\WOWBot\work\bot\bot\bin\Debug\SlimDX.pdb
 C:\Users\sania\Documents\WOWBot\work\bot\bot\bin\Debug\SlimDX.xml
 C:\Users\sania\Documents\WOWBot\work\bot\bot\obj\Debug\bot.csprojResolveAssemblyReference.cache
+C:\Users\sania\Documents\WOWBot\work\bot\bot\bin\Debug\SlimDX.dll

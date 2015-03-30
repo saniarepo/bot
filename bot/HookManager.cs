@@ -9,60 +9,44 @@ using System.Threading;
 
 namespace bot
 {
-    class HookManager
+    public static class  HookManager
     {
-        public ProcessMemory processMemory = null;
-        private D3D d3d = null;
-        public IntPtr argumentAddress1;
-        public IntPtr argumentAddress2;
-        public int RandomOffset;
-        private Object Locker = new Object();
-        private uint bufferSize = 80;
-        private IntPtr HookAddress = IntPtr.Zero;
+        public static IntPtr argumentAddress1;
+        public static IntPtr argumentAddress2;
+        public static int RandomOffset;
+        private static Object Locker = new Object();
+        private static uint bufferSize = 80;
+        private static IntPtr HookAddress = IntPtr.Zero;
 
-        public HookManager(ProcessMemory processMemory, D3D d3d)
-        {
-            this.processMemory = processMemory;
-            this.d3d = d3d;
-        }
 
-        public IntPtr getHookAddress()
+        public static IntPtr getHookAddress()
         {
-            return this.HookAddress;
+            return HookAddress;
         }
 
         /*функция для внедрения в процесс игры asm кода и записи в функции DirectX перехода на этот код*/
-        public void inject()
+        public static void inject()
         {
             /*получение адреса и опкодов*/
-            IntPtr Address = d3d.getAddress();
-            byte[] OpCodes = d3d.getOpcode();
-
-            /** вывод адреса и опкодов **/
-            System.Console.WriteLine("addr: " + Address.ToString("X8") + "\n");
-            System.Console.WriteLine("opcodes: \n");
-            for (int i = 0; i < OpCodes.Length; i++)
-            {
-                System.Console.Write(OpCodes[i].ToString("X2") + " ");
-            }
-
-            
+            IntPtr Address = D3D.Address;
+            byte[] OpCodes = D3D.OpCode;
+ 
             /*внедрение в процесс игры*/
                       
             Process.EnterDebugMode();
-            var dwThreadId = Process.GetProcessById(this.processMemory.getProcessId()).Threads[0].Id;
-            var ThreadHandle = processMemory.OpenThr((uint)dwThreadId);
+            var dwThreadId = Process.GetProcessById((int)ProcessMemory.getProcessId()).Threads[0].Id;
+            var ThreadHandle = ProcessMemory.OpenThr((uint)dwThreadId);
 
             var rnd = new Random();
             RandomOffset = rnd.Next(0, 60);
-            HookAddress = processMemory.AllocateMemory((uint)(6000 + rnd.Next(1, 2000))) + RandomOffset;
+            HookAddress = ProcessMemory.AllocateMemory((uint)(6000 + rnd.Next(1, 2000))) + RandomOffset;
 
-            argumentAddress1 = processMemory.AllocateMemory(80);
-            processMemory.WriteBytes(argumentAddress1, new byte[80]);
-            argumentAddress2 = processMemory.AllocateMemory(bufferSize);
-            processMemory.WriteBytes(argumentAddress2, new byte[80]);
-            var resultAddress = processMemory.AllocateMemory(4);
-            processMemory.Write(resultAddress, 0);
+            argumentAddress1 = ProcessMemory.AllocateMemory(80);
+            ProcessMemory.WriteBytes(argumentAddress1, new byte[80]);
+            argumentAddress2 = ProcessMemory.AllocateMemory(bufferSize);
+            ProcessMemory.WriteBytes(argumentAddress2, new byte[80]);
+            var resultAddress = ProcessMemory.AllocateMemory(4);
+            ProcessMemory.Write(resultAddress, 0);
 
             /*asm код который внедряется в память wow процесса*/
             List<string> asmLine = new List<string> {
@@ -98,59 +82,59 @@ namespace bot
                                             "popad",
                                             "popfd"
                                         };
-            processMemory.Asm = new ManagedFasm(processMemory.getHandle());
-            processMemory.Asm.Clear();
+            ProcessMemory.Asm = new ManagedFasm(ProcessMemory.getHandle());
+            ProcessMemory.Asm.Clear();
             foreach (var str in ObfuscateAsm(asmLine))
             {
-                processMemory.Asm.AddLine(str);
+                ProcessMemory.Asm.AddLine(str);
             }
 
-            processMemory.Asm.Inject((uint)HookAddress);
-            var length = (uint)processMemory.Asm.Assemble().Length;
-            processMemory.WriteBytes((IntPtr)((uint)HookAddress + length), OpCodes);
-            processMemory.Asm.Clear();
-            processMemory.Asm.AddLine("jmp " + (Address + OpCodes.Length));
-            processMemory.Asm.Inject((uint)(((uint)HookAddress + length) + OpCodes.Length));
-            processMemory.Asm.Clear();
+            ProcessMemory.Asm.Inject((uint)HookAddress);
+            var length = (uint)ProcessMemory.Asm.Assemble().Length;
+            ProcessMemory.WriteBytes((IntPtr)((uint)HookAddress + length), OpCodes);
+            ProcessMemory.Asm.Clear();
+            ProcessMemory.Asm.AddLine("jmp " + (Address + OpCodes.Length));
+            ProcessMemory.Asm.Inject((uint)(((uint)HookAddress + length) + OpCodes.Length));
+            ProcessMemory.Asm.Clear();
 
             /*вставка перехода в начало функции в DirectX на наш Hook*/
-            processMemory.Asm.AddLine("jmp " + HookAddress);
+            ProcessMemory.Asm.AddLine("jmp " + HookAddress);
             for (var k = 0; k <= ((OpCodes.Length - 5) - 1); k++)
             {
-                processMemory.Asm.AddLine("nop");
+                ProcessMemory.Asm.AddLine("nop");
             }
-            processMemory.Asm.Inject((uint)Address);
+            ProcessMemory.Asm.Inject((uint)Address);
 
         }//end inject
 
         /*функция для внедрения и вызова asm кода для вызова функций (непотокобезопасная, без обфускации) wow*/
-        public byte[] InjectAndExecuteOld(IEnumerable<string> asm, bool returnValue = false, int returnLength = 0)
+        public static byte[] InjectAndExecuteOld(IEnumerable<string> asm, bool returnValue = false, int returnLength = 0)
         {
-            processMemory.Asm.Clear();
+            ProcessMemory.Asm.Clear();
             foreach (var str in asm)
             {
-                processMemory.Asm.AddLine(str);
+                ProcessMemory.Asm.AddLine(str);
             }
-            IntPtr dwAddress = processMemory.AllocateMemory((uint)(processMemory.Asm.Assemble().Length + 60));
-            processMemory.Asm.Inject((uint)dwAddress);
-            processMemory.Write(argumentAddress1, (int)dwAddress);
-            while (processMemory.Read(argumentAddress1) > 0)
+            IntPtr dwAddress = ProcessMemory.AllocateMemory((uint)(ProcessMemory.Asm.Assemble().Length + 60));
+            ProcessMemory.Asm.Inject((uint)dwAddress);
+            ProcessMemory.Write(argumentAddress1, (int)dwAddress);
+            while (ProcessMemory.Read(argumentAddress1) > 0)
             {
                 Thread.Sleep(1);
             }
             byte[] result = new byte[0];
             if (returnValue)
             {
-                result = processMemory.ReadBytes((IntPtr)processMemory.Read(argumentAddress2), (uint)returnLength);
+                result = ProcessMemory.ReadBytes((IntPtr)ProcessMemory.Read(argumentAddress2), (uint)returnLength);
             }
-            processMemory.Write(argumentAddress2, 0);
-            processMemory.FreeMemory(dwAddress);
+            ProcessMemory.Write(argumentAddress2, 0);
+            ProcessMemory.FreeMemory(dwAddress);
 
             return result;
         }
 
         /*функция для внедрения и вызова asm кода для вызова функций wow (потокобезопасная, с обфускацией)*/
-        public byte[] InjectAndExecute(IEnumerable<string> asm, bool returnValue = false, int returnLength = 0)
+        public static byte[] InjectAndExecute(IEnumerable<string> asm, bool returnValue = false, int returnLength = 0)
         {
             var rnd = new Random();
             var offset = 0;
@@ -163,7 +147,7 @@ namespace bot
                 offset = 0;
                 randomValue = (uint)rnd.Next(0, 60);
                 //Наша очередь может хранить 80/4 = 20 значений
-                while (processMemory.Read(argumentAddress1 + offset) != 0 || processMemory.Read(argumentAddress2 + offset) != 0)
+                while (ProcessMemory.Read(argumentAddress1 + offset) != 0 || ProcessMemory.Read(argumentAddress2 + offset) != 0)
                 {
                     offset += 4;
                     if (offset >= 80)
@@ -171,30 +155,30 @@ namespace bot
                         offset = 0;
                     }
                 }
-                processMemory.Asm.Clear();
+                ProcessMemory.Asm.Clear();
                 foreach (var str in asm)
                 {
                     for (var i = rnd.Next(0, 3); i >= 1; i--)
                     {
-                        processMemory.Asm.AddLine(GetFakeCommand());
+                        ProcessMemory.Asm.AddLine(GetFakeCommand());
                     }
-                    processMemory.Asm.AddLine(str);
+                    ProcessMemory.Asm.AddLine(str);
                 }
-                dwAddress = (uint)processMemory.AllocateMemory((uint)(processMemory.Asm.Assemble().Length + rnd.Next(60, 80))) + randomValue;
-                processMemory.Asm.Inject(dwAddress);
-                processMemory.Write((IntPtr)argumentAddress1, (int)(dwAddress + offset));
+                dwAddress = (uint)ProcessMemory.AllocateMemory((uint)(ProcessMemory.Asm.Assemble().Length + rnd.Next(60, 80))) + randomValue;
+                ProcessMemory.Asm.Inject(dwAddress);
+                ProcessMemory.Write((IntPtr)argumentAddress1, (int)(dwAddress + offset));
             }
-            while (processMemory.Read(argumentAddress1 + offset) > 0)
+            while (ProcessMemory.Read(argumentAddress1 + offset) > 0)
             {
                 Thread.Sleep(1);
             }
             byte[] result = new byte[0];
             if (returnValue)
             {
-                result = processMemory.ReadBytes((IntPtr)processMemory.Read(argumentAddress2 + offset), (uint)returnLength);
+                result = ProcessMemory.ReadBytes((IntPtr)ProcessMemory.Read(argumentAddress2 + offset), (uint)returnLength);
             }
-            processMemory.Write(argumentAddress2 + offset, 0);
-            processMemory.FreeMemory((IntPtr)(dwAddress - randomValue));
+            ProcessMemory.Write(argumentAddress2 + offset, 0);
+            ProcessMemory.FreeMemory((IntPtr)(dwAddress - randomValue));
 
             return result;
         }

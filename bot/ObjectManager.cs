@@ -92,18 +92,12 @@ namespace bot
         private IntPtr _baseAddress;
         private WoWGuid _activePlayer;
         private WoWPlayer _activePlayerObj;
-        private ProcessMemory processMemory = null;
         private static List<WowObject> listObjects;
 
         public void UpdateBaseAddress()
         {
-            var connection = (IntPtr)this.processMemory.Read((IntPtr)ObjectManagerAddr.connection, true);
-            _baseAddress = (IntPtr)this.processMemory.Read(connection + (int)ObjectManagerAddr.objectManager);
-        }
-
-        public void setProcessMemory(ProcessMemory processMemory)
-        {
-            this.processMemory = processMemory;
+            var connection = (IntPtr)ProcessMemory.Read((IntPtr)ObjectManagerAddr.connection, true);
+            _baseAddress = (IntPtr)ProcessMemory.Read(connection + (int)ObjectManagerAddr.objectManager);
         }
         
         
@@ -134,12 +128,12 @@ namespace bot
 
         public IntPtr NextObject(IntPtr current)
         {
-            return (IntPtr)this.processMemory.Read(current + _curMgr.VisibleObjects.m_fulllist.baseClass.m_linkoffset + IntPtr.Size);
+            return (IntPtr)ProcessMemory.Read(current + _curMgr.VisibleObjects.m_fulllist.baseClass.m_linkoffset + IntPtr.Size);
         }
 
         public IEnumerable GetObjects()
         {
-            _curMgr = this.processMemory.ReadStruct<CurMgr>(BaseAddress);
+            _curMgr = ProcessMemory.ReadStruct<CurMgr>(BaseAddress);
             _activePlayer = new WoWGuid();
             IntPtr first = FirstObject();
             listObjects = new List<WowObject>();
