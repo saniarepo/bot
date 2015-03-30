@@ -191,6 +191,21 @@ namespace bot
             return BitConverter.ToUInt32(buffer, 0);
         }
 
+        public ulong Read(IntPtr address, bool size64)
+        {
+            if (this.handle == (IntPtr)0)
+            {
+                return 0;
+            }
+            
+            uint length = (uint)8;
+            byte[] buffer = new byte[length];
+            int bytesRead;
+
+            ReadProcessMemory(this.handle, address, buffer, length, out bytesRead);
+            return BitConverter.ToUInt64(buffer, 0);
+        }
+
         
         public T ReadStruct<T>( IntPtr address ) where T : struct
         {
@@ -231,12 +246,26 @@ namespace bot
             return worked;
         }
 
+        public bool Write(IntPtr address, ulong value)
+        {
+            if (this.handle == (IntPtr)0)
+            {
+                return false;
+            }
+            byte[] buffer = BitConverter.GetBytes(value);
+
+            int bytesWritten;
+            bool worked = WriteProcessMemory(this.handle, address, buffer, (uint)buffer.Length, out bytesWritten);
+            return worked;
+        }
+
         public bool WriteStruct<T>(IntPtr address, T value) where T : struct
         {
             if (this.handle == (IntPtr)0)
             {
                 return false;
             }
+            
             byte[] buffer = StructToBuff<T>(value);
 
             int bytesWritten;
