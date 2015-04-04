@@ -130,7 +130,7 @@ namespace bot
         private static IntPtr handle;
         private static uint processId;
         public static ManagedFasm Asm;
-        public static IntPtr ImageBase = (IntPtr)400000;
+        public static IntPtr ImageBase = (IntPtr)0x400000;
 
         
         public static void attachProcess(uint procId) 

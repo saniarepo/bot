@@ -91,7 +91,7 @@ namespace bot
                         "@out:",
                         "retn"
                         };
-            HookManager.InjectAndExecute(asm);
+            HookManager.InjectAndExecuteOld(asm);
             ProcessMemory.FreeMemory(positionAddress);
             ProcessMemory.FreeMemory(guidAddress);
             ProcessMemory.FreeMemory(precisionAddress);

@@ -26,13 +26,14 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile />
+    <ProductVersion>12.0.0</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>True</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>False</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -42,7 +43,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
+    <Optimize>True</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -50,13 +51,6 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="fasmdll_managed, Version=1.0.5025.35375, Culture=neutral, processorArchitecture=x86">
-      <HintPath>bin\Debug\fasmdll_managed.dll</HintPath>
-    </Reference>
-    <Reference Include="qip, Version=2.5.12479.763, Culture=neutral, PublicKeyToken=50a565ab5c01ae50, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Debug\qip.exe</HintPath>
-    </Reference>
     <Reference Include="SlimDX, Version=4.0.13.43, Culture=neutral, PublicKeyToken=b1b0c32fd1ffe4f9, processorArchitecture=x86" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -66,12 +60,16 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Tripper.RecastManaged, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b2150347bb351956, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="fasmdll_managed, Version=1.0.5025.35375, Culture=neutral, PublicKeyToken=null">
+      <HintPath>bin\Debug\fasmdll_managed.dll</HintPath>
+    </Reference>
+    <Reference Include="Honorbuddy">
+      <HintPath>bin\Debug\qip.exe</HintPath>
+    </Reference>
+    <Reference Include="Tripper.RecastManaged">
       <HintPath>bin\Debug\Tripper.RecastManaged.dll</HintPath>
     </Reference>
-    <Reference Include="Tripper.Tools, Version=1.0.0.0, Culture=neutral, PublicKeyToken=c40611ce03f849a2, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Tripper.Tools">
       <HintPath>bin\Debug\Tripper.Tools.dll</HintPath>
     </Reference>
   </ItemGroup>
@@ -85,6 +83,7 @@
     <Compile Include="WorldClick.cs" />
     <Compile Include="WowObject.cs" />
     <Compile Include="WowUnit.cs" />
+    <Compile Include="Command.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

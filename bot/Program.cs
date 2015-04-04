@@ -38,6 +38,14 @@ namespace bot
             /*вывод HookAddress*/
             System.Console.WriteLine("\nHookAddress: " + HookManager.getHookAddress().ToString("X8"));
 
+			String command = "";
+			while (command != "quit") 
+			{
+				System.Console.WriteLine("Input command ('quit - exit'): ");
+				command = System.Console.ReadLine();
+				Command.execute(command);
+			}
+
         }
         
         

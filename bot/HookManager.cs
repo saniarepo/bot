@@ -138,7 +138,7 @@ namespace bot
         {
             var rnd = new Random();
             var offset = 0;
-            uint dwAddress;
+            IntPtr dwAddress;
             uint randomValue;
 
 
@@ -164,8 +164,9 @@ namespace bot
                     }
                     ProcessMemory.Asm.AddLine(str);
                 }
-                dwAddress = (uint)ProcessMemory.AllocateMemory((uint)(ProcessMemory.Asm.Assemble().Length + rnd.Next(60, 80))) + randomValue;
-                ProcessMemory.Asm.Inject(dwAddress);
+                dwAddress = (IntPtr)((uint)ProcessMemory.AllocateMemory((uint)(ProcessMemory.Asm.Assemble().Length + rnd.Next(60, 80))) + randomValue);
+				System.Console.WriteLine("InjectAndExecute Address: " + dwAddress.ToString("X8") );
+				ProcessMemory.Asm.Inject((uint)dwAddress);
                 ProcessMemory.Write((IntPtr)argumentAddress1, (int)(dwAddress + offset));
             }
             while (ProcessMemory.Read(argumentAddress1 + offset) > 0)
@@ -178,7 +179,7 @@ namespace bot
                 result = ProcessMemory.ReadBytes((IntPtr)ProcessMemory.Read(argumentAddress2 + offset), (uint)returnLength);
             }
             ProcessMemory.Write(argumentAddress2 + offset, 0);
-            ProcessMemory.FreeMemory((IntPtr)(dwAddress - randomValue));
+            ProcessMemory.FreeMemory((IntPtr)((uint)dwAddress - randomValue));
 
             return result;
         }
