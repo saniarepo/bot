@@ -136,7 +136,7 @@ namespace bot
         /*функция для внедрения и вызова asm кода для вызова функций wow (потокобезопасная, с обфускацией)*/
         public static byte[] InjectAndExecute(IEnumerable<string> asm, bool returnValue = false, int returnLength = 0)
         {
-            var rnd = new Random();
+			var rnd = new Random();
             var offset = 0;
             IntPtr dwAddress;
             uint randomValue;
@@ -167,7 +167,7 @@ namespace bot
                 dwAddress = (IntPtr)((uint)ProcessMemory.AllocateMemory((uint)(ProcessMemory.Asm.Assemble().Length + rnd.Next(60, 80))) + randomValue);
 				System.Console.WriteLine("InjectAndExecute Address: " + dwAddress.ToString("X8") );
 				ProcessMemory.Asm.Inject((uint)dwAddress);
-                ProcessMemory.Write((IntPtr)argumentAddress1, (int)(dwAddress + offset));
+                ProcessMemory.Write(argumentAddress1 + offset, (int)dwAddress );
             }
             while (ProcessMemory.Read(argumentAddress1 + offset) > 0)
             {

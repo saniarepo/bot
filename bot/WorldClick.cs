@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -91,8 +91,32 @@ namespace bot
                         "@out:",
                         "retn"
                         };
-            HookManager.InjectAndExecuteOld(asm);
-            ProcessMemory.FreeMemory(positionAddress);
+
+			//HookManager.InjectAndExecute(asm);
+
+			/*тестовый код*/
+			int number = Convert.ToInt32(x);
+			var asm_test = new[]{
+				"push ecx", 
+				"mov ecx, " + precisionAddress,
+				"mov eax, " + number,
+				"mov [ecx], eax", 
+				"mov eax, ecx", 
+				"pop ecx", 
+				"retn"
+			};
+            
+
+			foreach(var str in asm_test)
+			{
+				System.Console.WriteLine(str);
+			}
+			byte[] b = HookManager.InjectAndExecute(asm_test, true, 4);
+			int res = BitConverter.ToInt32(b,0);
+			System.Console.WriteLine(res.ToString());
+			/*конец тестового кода*/
+
+			ProcessMemory.FreeMemory(positionAddress);
             ProcessMemory.FreeMemory(guidAddress);
             ProcessMemory.FreeMemory(precisionAddress);
         }

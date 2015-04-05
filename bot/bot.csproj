@@ -26,8 +26,6 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <ProductVersion>12.0.0</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -63,14 +61,14 @@
     <Reference Include="fasmdll_managed, Version=1.0.5025.35375, Culture=neutral, PublicKeyToken=null">
       <HintPath>bin\Debug\fasmdll_managed.dll</HintPath>
     </Reference>
-    <Reference Include="Honorbuddy">
-      <HintPath>bin\Debug\qip.exe</HintPath>
-    </Reference>
     <Reference Include="Tripper.RecastManaged">
       <HintPath>bin\Debug\Tripper.RecastManaged.dll</HintPath>
     </Reference>
     <Reference Include="Tripper.Tools">
       <HintPath>bin\Debug\Tripper.Tools.dll</HintPath>
+    </Reference>
+    <Reference Include="Honorbuddy">
+      <HintPath>bin\Debug\qip.exe</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
